@@ -6,23 +6,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.database import queries
+from app.filters.admin import user_is_admin
 from app.handlers.screen import clear_screen
 from app.keyboards import user as kb
 
 router = Router()
 
 
-def _is_admin(user_id: int) -> bool:
-    return user_id == settings.admin_id
-
-
 @router.message(CommandStart())
-async def cmd_start(message: Message, state: FSMContext, bot: Bot) -> None:
+async def cmd_start(message: Message, state: FSMContext, session: AsyncSession, bot: Bot) -> None:
     await clear_screen(bot, message.chat.id, state)
     await state.clear()
+    is_admin = await user_is_admin(session, message.from_user.id)
     await message.answer(
         "Добро пожаловать в магазин <b>Brand Ochki</b>!\n\nВыберите раздел:",
-        reply_markup=kb.main_menu(_is_admin(message.from_user.id)),
+        reply_markup=kb.main_menu(is_admin),
     )
 
 
