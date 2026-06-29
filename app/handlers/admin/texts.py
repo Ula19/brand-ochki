@@ -5,16 +5,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.database import queries
+from app.emojis import E
 from app.keyboards import admin as akb
 from app.states.admin import EditSetting
 
 router = Router()
 
 
-# Ключ → (название кнопки, дефолт из .env). Дефолт используется, если в БД ещё пусто.
+# Ключ → (название, дефолт из .env, имя премиум-эмодзи). Дефолт — если в БД ещё пусто.
 TEXTS = {
-    "shop_info": ("📍 О магазине", "shop_info"),
-    "contacts": ("📞 Контакты", "contacts"),
+    "shop_info": ("О магазине", "shop_info", "pin"),
+    "contacts": ("Контакты", "contacts", "phone"),
 }
 
 
@@ -22,11 +23,16 @@ def _default_for(key: str) -> str:
     return getattr(settings, TEXTS[key][1])
 
 
+def _label(key: str) -> str:
+    """Название текста с премиум-иконкой для сообщений."""
+    return f"{E[TEXTS[key][2]]} {TEXTS[key][0]}"
+
+
 @router.callback_query(F.data == "admin:t:menu")
 async def texts_menu(callback: CallbackQuery, state: FSMContext) -> None:
     await state.clear()
     await callback.message.edit_text(
-        "📝 <b>Тексты</b>\n\nВыберите текст для просмотра и редактирования:",
+        f"{E['memo']} <b>Тексты</b>\n\nВыберите текст для просмотра и редактирования:",
         reply_markup=akb.texts_menu(),
     )
     await callback.answer()
@@ -39,9 +45,8 @@ async def show_text(callback: CallbackQuery, session: AsyncSession) -> None:
         await callback.answer("Неизвестный текст", show_alert=True)
         return
     current = await queries.get_setting(session, key, default=_default_for(key))
-    label = TEXTS[key][0]
     await callback.message.edit_text(
-        f"<b>{label}</b> — текущий текст:\n\n{current}",
+        f"<b>{_label(key)}</b> — текущий текст:\n\n{current}",
         reply_markup=akb.text_show_kb(key),
     )
     await callback.answer()
@@ -55,9 +60,8 @@ async def edit_text_start(callback: CallbackQuery, state: FSMContext) -> None:
         return
     await state.set_state(EditSetting.waiting_value)
     await state.update_data(key=key)
-    label = TEXTS[key][0]
     await callback.message.edit_text(
-        f"Отправьте новый текст для «{label}».\n\n"
+        f"Отправьте новый текст для «{_label(key)}».\n\n"
         "Можно использовать HTML: <b>жирный</b>, <i>курсив</i>, "
         "<a href='https://example.com'>ссылка</a>, <a href='tel:+998901234567'>номер</a>.\n"
         "Переносы строк сохраняются как есть.",
@@ -82,8 +86,7 @@ async def edit_text_save(message: Message, state: FSMContext, session: AsyncSess
         return
     await queries.set_setting(session, key, new_value)
     await state.clear()
-    label = TEXTS[key][0]
     await message.answer(
-        f"✅ Текст «{label}» обновлён.\n\nПредпросмотр:\n\n{new_value}",
+        f"{E['check']} Текст «{_label(key)}» обновлён.\n\nПредпросмотр:\n\n{new_value}",
         reply_markup=akb.text_show_kb(key),
     )
