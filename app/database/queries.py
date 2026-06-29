@@ -260,6 +260,14 @@ async def add_admin(
     return admin
 
 
+async def sync_admin_username(session: AsyncSession, telegram_id: int, username: str) -> None:
+    """Обновляет @username админа, если он есть в БД и значение изменилось."""
+    admin = await session.get(Admin, telegram_id)
+    if admin is not None and admin.username != username:
+        admin.username = username
+        await session.commit()
+
+
 async def remove_admin(session: AsyncSession, telegram_id: int) -> bool:
     admin = await session.get(Admin, telegram_id)
     if admin is None:
