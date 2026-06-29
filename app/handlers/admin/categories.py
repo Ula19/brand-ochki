@@ -5,6 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import queries
+from app.emojis import E
 from app.keyboards import admin as akb
 from app.states.admin import AddCategory
 
@@ -13,7 +14,7 @@ router = Router()
 
 async def _show_list(message: Message, session: AsyncSession, *, edit: bool, prefix: str = "") -> None:
     cats = await queries.list_all_categories(session)
-    header = "📂 <b>Категории</b>\n\nНажмите на категорию, чтобы активировать/деактивировать."
+    header = f"{E['folder']} <b>Категории</b>\n\nНажмите на категорию, чтобы активировать/деактивировать."
     text = f"{prefix}{header}" if prefix else header
     if edit:
         await message.edit_text(text, reply_markup=akb.categories_admin(cats))
@@ -59,7 +60,7 @@ async def receive_name(message: Message, state: FSMContext, session: AsyncSessio
         )
         return
     await state.clear()
-    await _show_list(message, session, edit=False, prefix=f"✅ Категория «{name}» добавлена.\n\n")
+    await _show_list(message, session, edit=False, prefix=f"{E['check']} Категория «{name}» добавлена.\n\n")
 
 
 @router.callback_query(F.data.startswith("admin:c:toggle:"))
