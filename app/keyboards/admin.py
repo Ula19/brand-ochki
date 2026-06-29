@@ -1,17 +1,45 @@
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from app.database.models import Brand, Category, Product
+from app.database.models import Admin, Brand, Category, Product
 from app.utils.formatting import format_price
 
 
-def admin_main() -> InlineKeyboardMarkup:
+def admin_main(is_superadmin: bool = False) -> InlineKeyboardMarkup:
     b = InlineKeyboardBuilder()
     b.button(text="📂 Категории", callback_data="admin:c:list")
     b.button(text="🏷 Бренды", callback_data="admin:b:list")
     b.button(text="📦 Товары", callback_data="admin:p:section")
     b.button(text="📝 Тексты", callback_data="admin:t:menu")
-    b.adjust(2, 2)
+    if is_superadmin:
+        b.button(text="👥 Админы", callback_data="admin:adm:list")
+        b.adjust(2, 2, 1)
+    else:
+        b.adjust(2, 2)
+    return b.as_markup()
+
+
+# ---------- Админы (только супер-админ) ----------
+
+def admins_admin(admins: list[Admin]) -> InlineKeyboardMarkup:
+    b = InlineKeyboardBuilder()
+    for a in admins:
+        label = f"@{a.username}" if a.username else f"ID {a.telegram_id}"
+        b.button(text=f"🗑 {label}", callback_data=f"admin:adm:del:{a.telegram_id}")
+    b.adjust(1)
+    actions = InlineKeyboardBuilder()
+    actions.button(text="➕ Добавить админа", callback_data="admin:adm:add")
+    actions.button(text="⬅️ В админ-панель", callback_data="admin:menu")
+    actions.adjust(1)
+    b.attach(actions)
+    return b.as_markup()
+
+
+def confirm_remove_admin(telegram_id: int) -> InlineKeyboardMarkup:
+    b = InlineKeyboardBuilder()
+    b.button(text="🗑 Да, удалить", callback_data=f"admin:adm:rm:{telegram_id}")
+    b.button(text="⬅️ Отмена", callback_data="admin:adm:list")
+    b.adjust(1)
     return b.as_markup()
 
 
