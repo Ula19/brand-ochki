@@ -5,6 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import queries
+from app.emojis import E
 from app.keyboards import admin as akb
 from app.states.admin import AddBrand
 
@@ -13,7 +14,7 @@ router = Router()
 
 async def _show_list(message: Message, session: AsyncSession, *, edit: bool, prefix: str = "") -> None:
     brands = await queries.list_all_brands(session)
-    header = "🏷 <b>Бренды</b>\n\nНажмите на бренд, чтобы активировать/деактивировать."
+    header = f"{E['tag']} <b>Бренды</b>\n\nНажмите на бренд, чтобы активировать/деактивировать."
     text = f"{prefix}{header}" if prefix else header
     if edit:
         await message.edit_text(text, reply_markup=akb.brands_admin(brands))
@@ -59,7 +60,7 @@ async def receive_name(message: Message, state: FSMContext, session: AsyncSessio
         )
         return
     await state.clear()
-    await _show_list(message, session, edit=False, prefix=f"✅ Бренд «{name}» добавлен.\n\n")
+    await _show_list(message, session, edit=False, prefix=f"{E['check']} Бренд «{name}» добавлен.\n\n")
 
 
 @router.callback_query(F.data.startswith("admin:b:toggle:"))
