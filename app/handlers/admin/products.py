@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import queries
 from app.database.models import Product
+from app.emojis import E
 from app.keyboards import admin as akb
 from app.states.admin import AddProduct, EditProductPrice, EditProductStock
 from app.utils.formatting import format_price, parse_price, parse_stock
@@ -24,7 +25,7 @@ async def open_section(callback: CallbackQuery, session: AsyncSession, state: FS
     await state.clear()
     cats = await queries.list_all_categories(session)
     await callback.message.edit_text(
-        "📦 <b>Товары</b>\n\nВыберите категорию для просмотра или добавьте новый товар:",
+        f"{E['box']} <b>Товары</b>\n\nВыберите категорию для просмотра или добавьте новый товар:",
         reply_markup=akb.products_section(cats),
     )
     await callback.answer()
@@ -44,7 +45,7 @@ async def list_products(callback: CallbackQuery, session: AsyncSession) -> None:
     total = await queries.count_all_products_by_category(session, cat_id)
     if total == 0:
         await callback.message.edit_text(
-            f"📦 Товаров в категории «{escape(category.name)}» пока нет.",
+            f"{E['box']} Товаров в категории «{escape(category.name)}» пока нет.",
             reply_markup=akb.products_admin_list([], cat_id, 0, 1),
         )
         await callback.answer()
@@ -55,7 +56,7 @@ async def list_products(callback: CallbackQuery, session: AsyncSession) -> None:
     products = await queries.list_all_products_by_category(session, cat_id, PER_PAGE, page * PER_PAGE)
 
     text = (
-        f"📦 Товары категории «<b>{escape(category.name)}</b>»\n"
+        f"{E['box']} Товары категории «<b>{escape(category.name)}</b>»\n"
         f"Всего: {total}"
     )
     await callback.message.edit_text(
@@ -80,9 +81,9 @@ async def show_product(callback: CallbackQuery, session: AsyncSession) -> None:
 
 
 def _format_admin_card(product: Product) -> str:
-    status = "✅ активен" if product.is_active else "❌ скрыт"
+    status = f"{E['check']} активен" if product.is_active else f"{E['cross']} скрыт"
     return (
-        f"📦 <b>{escape(product.name)}</b>\n"
+        f"{E['box']} <b>{escape(product.name)}</b>\n"
         f"Бренд: {escape(product.brand.name)}\n"
         f"Категория: {escape(product.category.name)}\n"
         f"Цена: {format_price(product.price, product.currency)}\n"
@@ -139,7 +140,7 @@ async def edit_price_value(message: Message, state: FSMContext, session: AsyncSe
     await state.clear()
     product = await queries.get_product(session, data["product_id"])
     await message.answer(
-        f"✅ Цена обновлена.\n\n{_format_admin_card(product)}",
+        f"{E['check']} Цена обновлена.\n\n{_format_admin_card(product)}",
         reply_markup=akb.product_admin_card(product),
     )
 
@@ -176,7 +177,7 @@ async def edit_stock_value(message: Message, state: FSMContext, session: AsyncSe
     await state.clear()
     product = await queries.get_product(session, data["product_id"])
     await message.answer(
-        f"✅ Остаток обновлён.\n\n{_format_admin_card(product)}",
+        f"{E['check']} Остаток обновлён.\n\n{_format_admin_card(product)}",
         reply_markup=akb.product_admin_card(product),
     )
 
@@ -317,7 +318,7 @@ async def add_brand_new_save(message: Message, state: FSMContext, session: Async
     await state.set_state(AddProduct.waiting_category)
     categories = await queries.list_active_categories(session)
     await message.answer(
-        f"✅ Бренд «{escape(brand.name)}» создан.\n\n<b>Шаг 7 из 8.</b> Выберите категорию:",
+        f"{E['check']} Бренд «{escape(brand.name)}» создан.\n\n<b>Шаг 7 из 8.</b> Выберите категорию:",
         reply_markup=akb.choose_category(categories),
     )
 
@@ -381,7 +382,7 @@ async def add_category_new_save(message: Message, state: FSMContext, session: As
     await state.update_data(category_id=category.id, category_name=category.name)
     await state.set_state(AddProduct.waiting_photo)
     await message.answer(
-        f"✅ Категория «{escape(category.name)}» создана.\n\n"
+        f"{E['check']} Категория «{escape(category.name)}» создана.\n\n"
         "<b>Шаг 8 из 8.</b> Пришлите фото товара (как фото, не как файл):",
         reply_markup=akb.cancel_kb(),
     )
@@ -453,7 +454,7 @@ async def add_save(callback: CallbackQuery, state: FSMContext, session: AsyncSes
     await state.clear()
     await callback.message.delete()
     await callback.message.answer(
-        f"✅ Товар «{escape(product.name)}» добавлен.",
+        f"{E['check']} Товар «{escape(product.name)}» добавлен.",
         reply_markup=akb.product_admin_card(await queries.get_product(session, product.id)),
     )
     await callback.answer()
