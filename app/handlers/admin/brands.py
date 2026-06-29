@@ -11,11 +11,11 @@ from app.states.admin import AddBrand
 router = Router()
 
 
-async def _show_list(message: Message, session: AsyncSession, prefix: str = "") -> None:
+async def _show_list(message: Message, session: AsyncSession, *, edit: bool, prefix: str = "") -> None:
     brands = await queries.list_all_brands(session)
     header = "🏷 <b>Бренды</b>\n\nНажмите на бренд, чтобы активировать/деактивировать."
     text = f"{prefix}{header}" if prefix else header
-    if message.text is not None:
+    if edit:
         await message.edit_text(text, reply_markup=akb.brands_admin(brands))
     else:
         await message.answer(text, reply_markup=akb.brands_admin(brands))
@@ -23,7 +23,7 @@ async def _show_list(message: Message, session: AsyncSession, prefix: str = "") 
 
 @router.callback_query(F.data == "admin:b:list")
 async def list_brands(callback: CallbackQuery, session: AsyncSession) -> None:
-    await _show_list(callback.message, session)
+    await _show_list(callback.message, session, edit=True)
     await callback.answer()
 
 
@@ -59,7 +59,7 @@ async def receive_name(message: Message, state: FSMContext, session: AsyncSessio
         )
         return
     await state.clear()
-    await _show_list(message, session, prefix=f"✅ Бренд «{name}» добавлен.\n\n")
+    await _show_list(message, session, edit=False, prefix=f"✅ Бренд «{name}» добавлен.\n\n")
 
 
 @router.callback_query(F.data.startswith("admin:b:toggle:"))
