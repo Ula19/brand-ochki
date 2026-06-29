@@ -1,0 +1,25 @@
+# Виртуальное окружение и кэш Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Локальная БД SQLite — в контейнере используется PostgreSQL
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Секреты и логи не кладём в образ
+.env
+*.log
+logs/
+
+# Git и служебное
+.git/
+.gitignore
+.dockerignore
+.idea/
+.vscode/
+.DS_Store
+backups/
