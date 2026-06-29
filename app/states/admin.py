@@ -33,3 +33,7 @@ class EditProductStock(StatesGroup):
 
 class EditSetting(StatesGroup):
     waiting_value = State()
+
+
+class AddAdmin(StatesGroup):
+    waiting_id = State()
