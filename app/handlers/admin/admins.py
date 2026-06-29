@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.database import queries
+from app.emojis import E
 from app.filters.admin import IsSuperAdmin
 from app.keyboards import admin as akb
 from app.states.admin import AddAdmin
@@ -19,9 +20,9 @@ router.callback_query.filter(IsSuperAdmin())
 async def _show_admins(message: Message, session: AsyncSession, *, edit: bool, prefix: str = "") -> None:
     admins = await queries.list_admins(session)
     if admins:
-        header = "👥 <b>Админы</b>\n\nДобавленные админы. Нажмите, чтобы удалить."
+        header = f"{E['users']} <b>Админы</b>\n\nДобавленные админы. Нажмите, чтобы удалить."
     else:
-        header = "👥 <b>Админы</b>\n\nПока никого не добавлено."
+        header = f"{E['users']} <b>Админы</b>\n\nПока никого не добавлено."
     text = f"{prefix}{header}" if prefix else header
     markup = akb.admins_admin(admins)
     if edit:
@@ -82,7 +83,7 @@ async def add_receive(message: Message, state: FSMContext, session: AsyncSession
         )
         return
     await state.clear()
-    await _show_admins(session=session, message=message, edit=False, prefix=f"✅ Админ (ID {telegram_id}) добавлен.\n\n")
+    await _show_admins(session=session, message=message, edit=False, prefix=f"{E['check']} Админ (ID {telegram_id}) добавлен.\n\n")
 
 
 # ---------- Удаление (с подтверждением) ----------
