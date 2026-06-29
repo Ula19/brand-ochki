@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.database import queries
+from app.emojis import E
 from app.handlers.screen import clear_screen, save_screen
 from app.keyboards import user as kb
 from app.utils.formatting import format_price, format_product_card
@@ -74,7 +75,7 @@ async def _show_feed(
         brand = await queries.get_brand(session, brand_id)
         brand_name = brand.name if brand is not None else None
 
-    header = f"📂 {category.name}"
+    header = f"{E['folder']} {category.name}"
     if brand_name:
         header += f" · {brand_name}"
     control_text = f"{header}\nТоваров: {total} · Страница {page + 1}/{total_pages}"
@@ -137,7 +138,7 @@ async def choose_brand_filter(callback: CallbackQuery, session: AsyncSession, st
         return
     brands = await queries.list_brands_in_category(session, cat_id)
     m = await callback.message.answer(
-        f"📂 {category.name}\n\nВыберите бренд:",
+        f"{E['folder']} {category.name}\n\nВыберите бренд:",
         reply_markup=kb.brand_filter_kb(brands, cat_id),
     )
     await save_screen(state, [m.message_id])
