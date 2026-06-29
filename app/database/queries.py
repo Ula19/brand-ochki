@@ -1,7 +1,7 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.models import Brand, Category, Product, Setting
+from app.database.models import Admin, Brand, Category, Product, Setting
 
 
 # ---------- Категории ----------
@@ -231,6 +231,42 @@ async def toggle_product(session: AsyncSession, product_id: int) -> bool | None:
     product.is_active = not product.is_active
     await session.commit()
     return product.is_active
+
+
+# ---------- Админы ----------
+
+async def is_db_admin(session: AsyncSession, telegram_id: int) -> bool:
+    """Есть ли пользователь среди добавленных супер-админом админов."""
+    return await session.get(Admin, telegram_id) is not None
+
+
+async def get_admin(session: AsyncSession, telegram_id: int) -> Admin | None:
+    return await session.get(Admin, telegram_id)
+
+
+async def list_admins(session: AsyncSession) -> list[Admin]:
+    stmt = select(Admin).order_by(Admin.created_at)
+    result = await session.execute(stmt)
+    return list(result.scalars().all())
+
+
+async def add_admin(
+    session: AsyncSession, telegram_id: int, username: str, added_by: int
+) -> Admin:
+    admin = Admin(telegram_id=telegram_id, username=username, added_by=added_by)
+    session.add(admin)
+    await session.commit()
+    await session.refresh(admin)
+    return admin
+
+
+async def remove_admin(session: AsyncSession, telegram_id: int) -> bool:
+    admin = await session.get(Admin, telegram_id)
+    if admin is None:
+        return False
+    await session.delete(admin)
+    await session.commit()
+    return True
 
 
 # ---------- Настройки (key-value) ----------
