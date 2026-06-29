@@ -6,11 +6,12 @@ from aiogram import Bot, Router
 from aiogram.types import ErrorEvent
 
 from app.config import settings
+from app.emojis import E
 
 router = Router()
 logger = logging.getLogger(__name__)
 
-USER_MESSAGE = "⚠️ Что-то пошло не так. Попробуйте позже или вернитесь в меню через /start."
+USER_MESSAGE = f"{E['warning']} Что-то пошло не так. Попробуйте позже или вернитесь в меню через /start."
 TB_LIMIT = 3000  # Telegram режет сообщения > 4096
 
 
@@ -47,7 +48,7 @@ async def on_error(event: ErrorEvent, bot: Bot) -> None:
     try:
         await bot.send_message(
             settings.admin_id,
-            f"⚠️ <b>Исключение в боте</b>\n\n<pre>{escape(tb)}</pre>",
+            f"{E['warning']} <b>Исключение в боте</b>\n\n<pre>{escape(tb)}</pre>",
         )
     except Exception:
         logger.exception("Failed to notify admin about error")
