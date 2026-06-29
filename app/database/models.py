@@ -1,6 +1,6 @@
 from datetime import datetime, UTC
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
@@ -46,6 +46,16 @@ class Product(Base):
 
     brand: Mapped[Brand] = relationship(lazy="selectin")
     category: Mapped[Category] = relationship(lazy="selectin")
+
+
+class Admin(Base):
+    """Админы, добавленные супер-админом. Сам супер-админ берётся из .env и здесь не хранится."""
+    __tablename__ = "admins"
+
+    telegram_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    username: Mapped[str] = mapped_column(String(64), default="", nullable=False)
+    added_by: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, nullable=False)
 
 
 class Setting(Base):
