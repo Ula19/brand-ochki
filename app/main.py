@@ -10,6 +10,7 @@ from app.database.base import async_session_maker
 from app.handlers import catalog, debug, errors, menu
 from app.handlers.admin import admin_router
 from app.logging_config import setup_logging
+from app.middlewares.admin_sync import AdminUsernameMiddleware
 from app.middlewares.database import DatabaseMiddleware
 
 
@@ -22,6 +23,7 @@ async def main() -> None:
     )
     dp = Dispatcher(storage=MemoryStorage())
     dp.update.middleware(DatabaseMiddleware(async_session_maker))
+    dp.update.middleware(AdminUsernameMiddleware())
 
     # Errors-роутер подключаем первым, чтобы он ловил всё.
     dp.include_router(errors.router)
