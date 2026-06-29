@@ -11,11 +11,11 @@ from app.states.admin import AddCategory
 router = Router()
 
 
-async def _show_list(message: Message, session: AsyncSession, prefix: str = "") -> None:
+async def _show_list(message: Message, session: AsyncSession, *, edit: bool, prefix: str = "") -> None:
     cats = await queries.list_all_categories(session)
     header = "📂 <b>Категории</b>\n\nНажмите на категорию, чтобы активировать/деактивировать."
     text = f"{prefix}{header}" if prefix else header
-    if message.text is not None:
+    if edit:
         await message.edit_text(text, reply_markup=akb.categories_admin(cats))
     else:
         await message.answer(text, reply_markup=akb.categories_admin(cats))
@@ -23,7 +23,7 @@ async def _show_list(message: Message, session: AsyncSession, prefix: str = "") 
 
 @router.callback_query(F.data == "admin:c:list")
 async def list_categories(callback: CallbackQuery, session: AsyncSession) -> None:
-    await _show_list(callback.message, session)
+    await _show_list(callback.message, session, edit=True)
     await callback.answer()
 
 
@@ -59,7 +59,7 @@ async def receive_name(message: Message, state: FSMContext, session: AsyncSessio
         )
         return
     await state.clear()
-    await _show_list(message, session, prefix=f"✅ Категория «{name}» добавлена.\n\n")
+    await _show_list(message, session, edit=False, prefix=f"✅ Категория «{name}» добавлена.\n\n")
 
 
 @router.callback_query(F.data.startswith("admin:c:toggle:"))
