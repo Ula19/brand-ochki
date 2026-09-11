@@ -96,21 +96,22 @@ async def toggle_brand(session: AsyncSession, brand_id: int) -> bool | None:
 
 # ---------- Товары — публичный каталог ----------
 
-def _active_product_conditions(category_id: int, brand_id: int | None):
+def _active_product_conditions(category_id: int, brand_ids: list[int] | None):
+    """Условия доступности товара. Пустой brand_ids — фильтра по бренду нет (все бренды)."""
     conditions = [
         Product.category_id == category_id,
         Product.is_active.is_(True),
         Product.stock > 0,
     ]
-    if brand_id:
-        conditions.append(Product.brand_id == brand_id)
+    if brand_ids:
+        conditions.append(Product.brand_id.in_(brand_ids))
     return conditions
 
 
 async def count_active_products(
-    session: AsyncSession, category_id: int, brand_id: int | None = None
+    session: AsyncSession, category_id: int, brand_ids: list[int] | None = None
 ) -> int:
-    stmt = select(func.count(Product.id)).where(*_active_product_conditions(category_id, brand_id))
+    stmt = select(func.count(Product.id)).where(*_active_product_conditions(category_id, brand_ids))
     result = await session.execute(stmt)
     return result.scalar_one()
 
@@ -120,11 +121,11 @@ async def list_active_products(
     category_id: int,
     limit: int,
     offset: int,
-    brand_id: int | None = None,
+    brand_ids: list[int] | None = None,
 ) -> list[Product]:
     stmt = (
         select(Product)
-        .where(*_active_product_conditions(category_id, brand_id))
+        .where(*_active_product_conditions(category_id, brand_ids))
         .order_by(Product.created_at.desc())
         .limit(limit)
         .offset(offset)
@@ -147,6 +148,15 @@ async def list_brands_in_category(session: AsyncSession, category_id: int) -> li
         .distinct()
         .order_by(Brand.name)
     )
+    result = await session.execute(stmt)
+    return list(result.scalars().all())
+
+
+async def list_brands_by_ids(session: AsyncSession, brand_ids: list[int]) -> list[Brand]:
+    """Бренды по списку ID — для подписи выбранного фильтра."""
+    if not brand_ids:
+        return []
+    stmt = select(Brand).where(Brand.id.in_(brand_ids)).order_by(Brand.name)
     result = await session.execute(stmt)
     return list(result.scalars().all())
 
