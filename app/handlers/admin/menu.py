@@ -33,6 +33,22 @@ async def back_to_admin(callback: CallbackQuery, state: FSMContext) -> None:
     await callback.answer()
 
 
+@router.callback_query(F.data == "admin:close")
+async def close_admin(callback: CallbackQuery, state: FSMContext, bot: Bot) -> None:
+    """Выход из админки в обычное меню — чтобы посмотреть магазин глазами покупателя."""
+    await state.clear()
+    try:
+        await callback.message.delete()
+    except Exception:
+        pass
+    await bot.send_message(
+        callback.message.chat.id,
+        f"{E['home']} Главное меню:",
+        reply_markup=ukb.main_menu(is_admin=True),
+    )
+    await callback.answer()
+
+
 @router.callback_query(F.data == "admin:cancel")
 async def cancel_fsm(callback: CallbackQuery, state: FSMContext) -> None:
     await state.clear()

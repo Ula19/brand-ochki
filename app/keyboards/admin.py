@@ -17,6 +17,9 @@ def admin_main(is_superadmin: bool = False) -> InlineKeyboardMarkup:
         b.adjust(2, 2, 1)
     else:
         b.adjust(2, 2)
+    exit_row = InlineKeyboardBuilder()
+    exit_row.button(text="В меню магазина", callback_data="admin:close", icon_custom_emoji_id=E_ID["home"])
+    b.attach(exit_row)
     return b.as_markup()
 
 
